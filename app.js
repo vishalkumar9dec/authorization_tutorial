@@ -1,4 +1,5 @@
 //jshint esversion:6
+require('dotenv').config()
 const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
@@ -20,10 +21,8 @@ const userSchema = new mongoose.Schema({
     password: String
 });
 
-//This is a simple example of encryption using a key.
-//NOTE: Please dont share any key on public platform example github, gitlab etc..
-const secret = "This is our secret key";
-userSchema.plugin(encrypt, { secret: secret, encryptedFields: ['password'] });
+//Using the environment variables
+userSchema.plugin(encrypt, { secret: process.env.SECRET_KEY, encryptedFields: ['password'] });
 
 const User = mongoose.model("userdetail", userSchema);
 
