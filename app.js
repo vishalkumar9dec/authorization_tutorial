@@ -4,7 +4,8 @@ const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const md5 = require("md5");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 
 const app = express();
@@ -39,8 +40,7 @@ app.route("/login")
 
 .post(function(req, res) {
     const email = req.body.username;
-    // Hashing the password during login and compare two hash values. A string will always generate the same hash.
-    const password = md5(req.body.password);
+    const password = req.body.password;
 
     User.findOne({ email: email }, function(err, foundUser) {
         if (err) {
@@ -51,11 +51,14 @@ app.route("/login")
                 res.send("ERROR: User Not Found !");
             } else {
 
-                if (foundUser.password === password) {
-                    res.render("secrets");
-                } else {
-                    res.send("ERROR: Password does not match !");
-                };
+                bcrypt.compare(password, foundUser.password, function(err, result) {
+                    // result == true
+                    if (result == true) {
+                        res.render("secrets");
+                    } else {
+                        res.send("ERROR: Password does not match !");
+                    }
+                });
             };
         }
     });
@@ -69,19 +72,25 @@ app.route("/register")
 })
 
 .post(function(req, res) {
-    const newUser = new User({
-        email: req.body.username,
-        password: md5(req.body.password) //Hashing the password during registration
+
+    bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+        // Store hash in your password DB.
+        const newUser = new User({
+            email: req.body.username,
+            password: hash //using the value from callback function
+        });
+
+        newUser.save(function(err) {
+            if (!err) {
+                res.render("secrets");
+            } else {
+                res.send(err);
+            }
+        });
     });
 
-    newUser.save(function(err) {
-        if (!err) {
-            res.render("secrets");
-        } else {
-            res.send(err);
-        }
-    });
 });
+
 
 
 
