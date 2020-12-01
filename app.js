@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
     password: String,
     googleId: String,
     facebookId: String,
-    bithday: String
+    name: String
 });
 
 //To be used for passwords
@@ -80,11 +80,12 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
         clientID: process.env.FACEBOOK_CLIENT_ID,
         clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-        callbackURL: "http://localhost:3000/auth/facebook/secrets"
+        callbackURL: "http://localhost:3000/auth/facebook/secrets",
+        profileFields: ['id', 'displayName', 'photos', 'email']
     },
     function(accessToken, refreshToken, profile, cb) {
-        console.log("Facebook id :" + profile.id + " Facebook Birthday : " + profile.birthday);
-        User.findOrCreate({ facebookId: profile.id }, { birthday: profile.birthday }, function(err, user) {
+        console.log("Facebook Profile :" + profile.id + " Facebook Display name " + profile.displayName);
+        User.findOrCreate({ facebookId: profile.id }, { name: profile.displayName }, function(err, user) {
             return cb(err, user);
         });
     }
